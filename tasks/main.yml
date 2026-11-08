@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Perform Converse installation tasks
+  when: converse_enabled | bool
+  tags:
+    - setup-all
+    - setup-converse
+    - install-all
+    - install-converse
+  block:
+    - name: Validate Converse configuration
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
+    - name: Install Converse
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+
+- name: Perform Converse uninstallation tasks
+  when: not converse_enabled | bool
+  tags:
+    - setup-all
+    - setup-converse
+  block:
+    - name: Uninstall Converse
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

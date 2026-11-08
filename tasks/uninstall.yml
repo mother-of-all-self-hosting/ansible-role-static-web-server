@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Check existence of Converse systemd service
+  ansible.builtin.stat:
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ converse_identifier }}.service"
+  register: converse_service_stat
+
+- name: Uninstall Converse systemd services and files
+  when: converse_service_stat.stat.exists | bool
+  block:
+    - name: Ensure Converse systemd service is stopped
+      ansible.builtin.service:
+        name: "{{ converse_identifier }}"
+        state: stopped
+        enabled: false
+        daemon_reload: true
+
+    - name: Ensure Converse systemd service does not exist
+      ansible.builtin.file:
+        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ converse_identifier }}.service"
+        state: absent
+
+    - name: Ensure Converse container network does not exist
+      when: converse_container_network_deletion_enabled
+      block:
+        - name: Ensure Converse container network does not exist via community.docker.docker_network
+          when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
+          community.docker.docker_network:
+            name: "{{ converse_container_network }}"
+            state: absent
+          register: converse_network_deletion_result
+
+        - name: Ensure Converse container network does not exist via ansible.builtin.command
+          when: devture_systemd_docker_base_container_network_creation_method == 'command'
+          ansible.builtin.command:
+            cmd: >-
+              {{ devture_systemd_docker_base_host_command_docker }} network rm
+              {{ converse_container_network }}
+          register: converse_network_deletion_result
+          changed_when: converse_container_network in converse_network_deletion_result.stdout
+
+    - name: Ensure Converse path does not exist
+      ansible.builtin.file:
+        path: "{{ converse_base_path }}"
+        state: absent

@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Ensure Converse paths exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+    owner: "{{ converse_uid }}"
+    group: "{{ converse_gid }}"
+  with_items:
+    - "{{ converse_base_path }}"
+    - "{{ converse_src_path }}"
+
+- name: Ensure Converse support files installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{ item }}.j2"
+    dest: "{{ converse_base_path }}/{{ item }}"
+    mode: "0640"
+    owner: "{{ converse_uid }}"
+    group: "{{ converse_gid }}"
+  with_items:
+    - env
+    - labels
+  register: converse_support_files_result
+
+- name: Ensure Converse custom source files are installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/src/{{ item }}.j2"
+    dest: "{{ converse_src_path }}/{{ item }}"
+    mode: "0640"
+    owner: "{{ converse_uid }}"
+    group: "{{ converse_gid }}"
+  with_items:
+    - footer.js
+    - fullscreen.html
+  register: converse_installation_custom_results
+
+- name: Ensure Converse repository is present on self-build
+  ansible.builtin.git:
+    repo: "{{ converse_container_image_self_build_repo }}"
+    version: "{{ converse_container_image_self_build_repo_version }}"
+    dest: "{{ converse_container_image_self_build_src_files_path }}"
+    force: "yes"
+  register: converse_git_pull_results
+
+- name: Ensure Converse source files are replaced with the custom files
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    owner: root
+    group: root
+    force: true
+    remote_src: true
+  with_items:
+    - { src: "{{ converse_src_path }}/footer.js", dest: "{{ converse_container_image_self_build_src_files_path }}/src/shared/components/footer.js" }
+    - { src: "{{ converse_src_path }}/fullscreen.html", dest: "{{ converse_container_image_self_build_src_files_path }}/fullscreen.html" }
+
+- name: Ensure Converse files for building container image installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{ item }}.j2"
+    dest: "{{ converse_container_image_self_build_src_files_path }}/{{ item }}"
+    mode: "0640"
+    owner: "{{ converse_uid }}"
+    group: "{{ converse_gid }}"
+  with_items:
+    - .dockerignore
+    - Dockerfile
+  register: converse_installation_dockerfile_results
+
+- name: Check if Converse container image exists to avoid recreating the same one
+  ansible.builtin.command: docker images -q "{{ converse_container_image_self_build_name }}"
+  register: converse_docker_image_exists
+  changed_when: false
+
+- name: Ensure Converse container image is built if the container image does not exist or the repository has been updated
+  community.docker.docker_image_build:
+    name: "{{ converse_container_image_self_build_name }}"
+    dockerfile: Dockerfile
+    path: "{{ converse_container_image_self_build_src_files_path }}"
+    pull: true
+    rebuild: "{{ 'always' if converse_installation_custom_results.changed or converse_docker_image_exists.stdout == '' or (converse_git_pull_results.before != converse_git_pull_results.after) | bool else 'never' }}"
+  register: converse_container_image_build_result
+
+- name: Ensure Converse container network is created via community.docker.docker_network
+  when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
+  community.docker.docker_network:
+    enable_ipv6: "{{ devture_systemd_docker_base_ipv6_enabled }}"
+    name: "{{ converse_container_network }}"
+    driver: bridge
+    driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
+  register: converse_network_creation_result
+
+- name: Ensure Converse container network is created via ansible.builtin.command
+  when: devture_systemd_docker_base_container_network_creation_method == 'command'
+  ansible.builtin.command:
+    cmd: >-
+      {{ devture_systemd_docker_base_host_command_docker }} network create
+      {% if devture_systemd_docker_base_ipv6_enabled %}--ipv6{% endif %}
+      {{ devture_systemd_docker_base_container_networks_driver_options_string }}
+      {{ converse_container_network }}
+  register: converse_network_creation_result
+  changed_when: converse_network_creation_result.rc == 0
+  failed_when: converse_network_creation_result.rc != 0 and 'already exists' not in converse_network_creation_result.stderr
+
+- name: Ensure Converse systemd service is present
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/systemd/converse.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ converse_identifier }}.service"
+    mode: "0644"
+  register: converse_systemd_service_result
+
+- name: Determine whether the Converse container is stale
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/util/determine_container_staleness.yml"
+
+- name: Determine whether Converse needs a restart
+  ansible.builtin.set_fact:
+    converse_restart_necessary: >-
+      {{
+        converse_support_files_result.changed | default(false)
+        or converse_systemd_service_result.changed | default(false)
+        or converse_container_image_build_result.changed | default(false)
+        or converse_container_stale | bool
+      }}

@@ -1,0 +1,33 @@
+{#
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+FROM node:26.13.0 AS build
+
+WORKDIR /app
+
+# Copy the application source code
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN make src/headless/dist/converse-headless.js
+
+# Build the application
+RUN npm run build
+
+# Use a lighter base image for the production environment
+FROM {{ converse_container_image_self_build_base_image }}
+
+# Copy resources and use fullscreen.html as index.html
+COPY --from=build /app/dist {{ converse_environment_variables_server_root }}/dist
+COPY --from=build /app/dev.html {{ converse_environment_variables_server_root }}/dev.html
+COPY --from=build /app/fullscreen.html {{ converse_environment_variables_server_root }}/index.html
+COPY --from=build /app/local.html {{ converse_environment_variables_server_root }}/local.html
+COPY --from=build /app/manifest.json {{ converse_environment_variables_server_root }}/manifest.json
+
+EXPOSE "{{ converse_container_http_port }}"

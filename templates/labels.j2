@@ -1,0 +1,69 @@
+{#
+SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+{% if converse_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if converse_container_labels_traefik_docker_network %}
+traefik.docker.network={{ converse_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if converse_container_labels_traefik_middleware_basic_auth_enabled %}
+{% set middlewares = middlewares + [converse_identifier + '-basic-auth'] %}
+traefik.http.middlewares.{{ converse_identifier }}-basic-auth.basicauth.users={{ converse_container_labels_traefik_middleware_basic_auth_users }}
+{% endif %}
+
+{% if converse_container_labels_traefik_path_prefix != '/' %}
+{#
+    redirectregex.regex without a leading caret (^) is intentional.
+#}
+traefik.http.middlewares.{{ converse_identifier }}-slashless-redirect.redirectregex.regex=({{ converse_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ converse_identifier }}-slashless-redirect.redirectregex.replacement=$1/
+{% set middlewares = middlewares + [converse_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if converse_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ converse_identifier }}-strip-prefix.stripprefix.prefixes={{ converse_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [converse_identifier + '-strip-prefix'] %}
+{% endif %}
+
+{% if converse_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in converse_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ converse_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [converse_identifier + '-add-request-headers'] %}
+{% endif %}
+
+{% if converse_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in converse_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ converse_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [converse_identifier + '-add-response-headers'] %}
+{% endif %}
+
+traefik.http.routers.{{ converse_identifier }}.rule={{ converse_container_labels_traefik_rule }}
+{% if converse_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ converse_identifier }}.priority={{ converse_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ converse_identifier }}.service={{ converse_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ converse_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ converse_identifier }}.entrypoints={{ converse_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ converse_identifier }}.tls={{ converse_container_labels_traefik_tls | to_json }}
+{% if converse_container_labels_traefik_tls %}
+traefik.http.routers.{{ converse_identifier }}.tls.certResolver={{ converse_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ converse_identifier }}.loadbalancer.server.port={{ converse_container_http_port }}
+{% endif %}
+
+{% for arg in converse_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
