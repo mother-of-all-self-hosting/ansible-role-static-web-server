@@ -18,11 +18,14 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Setting up Static Web Server
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Static Web Server](https://static-web-serverjs.org/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Static Web Server](https://static-web-server.net/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Static Web Server is a free and open-source XMPP chat client written in JavaScript which can be tightly integrated into any website.
+Static Web Server is a web server for static file-serving.
 
-See the project's [documentation](https://static-web-serverjs.org/docs/html/index.html) to learn what Static Web Server does and why it might be useful to you.
+See the project's [documentation](https://static-web-server.net/v3/) to learn what Static Web Server does and why it might be useful to you.
+
+>[!NOTE]
+> This role is configured to install [v3](https://static-web-server.net/v3/) by default.
 
 ## Adjusting the playbook configuration
 
@@ -62,9 +65,9 @@ There are some additional things you may wish to configure about the service.
 
 Take a look at:
 
-- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `static_web_server_config_initialize_custom_enabled` and `static_web_server_config_initialize_custom` variables.
+- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `static_web_server_environment_variables_additional_variables` variable.
 
-Refer to [this page](https://static-web-serverjs.org/docs/html/configuration.html) for available options which can be set to `static_web_server_config_initialize_custom`.
+Refer to [this page](https://static-web-server.net/v3/configuration/env) for available options which can be set to `static_web_server_environment_variables_additional_variables`.
 
 ## Installing
 
@@ -91,5 +94,5 @@ You can find the logs in [systemd-journald](https://www.freedesktop.org/software
 If you want to increase the verbosity, add the following configuration to your `vars.yml` file:
 
 ```yaml
-static_web_server_config_initialize_loglevel: debug
+static_web_server_environment_variables_server_log_level: debug
 ```
