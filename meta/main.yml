@@ -3,7 +3,7 @@ galaxy_info:
   author: Suguru Hirahara
   company: progressiv
   role_name: static_web_server
-  namespace: progressiv
+  namespace: mash
   description: Static Web Server
   platforms:
     - name: Debian
