@@ -49,7 +49,7 @@ Currently there is one testing scenario available. Testing whether the service i
 
 ### `default`
 
-Tests a standard Converse installation.
+Tests a standard Static Web Server installation.
 
 ## Running
 

@@ -7,12 +7,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
 [Unit]
-Description=Converse ({{ converse_identifier }})
-{% for service in converse_systemd_required_services_list %}
+Description=Static Web Server ({{ static_web_server_identifier }})
+{% for service in static_web_server_systemd_required_services_list %}
 Requires={{ service }}
 After={{ service }}
 {% endfor %}
-{% for service in converse_systemd_wanted_services_list %}
+{% for service in static_web_server_systemd_wanted_services_list %}
 Wants={{ service }}
 {% endfor %}
 DefaultDependencies=no
@@ -20,44 +20,44 @@ DefaultDependencies=no
 [Service]
 Type=simple
 Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
-ExecStartPre={{ devture_systemd_docker_base_host_command_sh }} -c '{{ converse_container_cleanup_command | trim | replace("\n", " ") }}'
+ExecStartPre={{ devture_systemd_docker_base_host_command_sh }} -c '{{ static_web_server_container_cleanup_command | trim | replace("\n", " ") }}'
 
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
-      --name={{ converse_identifier }} \
+      --name={{ static_web_server_identifier }} \
       --log-driver=none \
-      --user={{ converse_uid }}:{{ converse_gid }} \
+      --user={{ static_web_server_uid }}:{{ static_web_server_gid }} \
       --cap-drop=ALL \
       --read-only \
-      --network={{ converse_container_network }} \
-      {% if converse_container_http_host_bind_port %}
-      -p {{ converse_container_http_host_bind_port }}:{{ converse_container_http_port }} \
+      --network={{ static_web_server_container_network }} \
+      {% if static_web_server_container_http_host_bind_port %}
+      -p {{ static_web_server_container_http_host_bind_port }}:{{ static_web_server_container_http_port }} \
       {% endif %}
-      --env-file={{ converse_base_path }}/env \
-      --label-file={{ converse_base_path }}/labels \
-      {% for volume in converse_container_additional_volumes %}
+      --env-file={{ static_web_server_base_path }}/env \
+      --label-file={{ static_web_server_base_path }}/labels \
+      {% for volume in static_web_server_container_additional_volumes %}
       --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options | default('') else '' }} \
       {% endfor %}
-      {% for arg in converse_container_extra_arguments %}
+      {% for arg in static_web_server_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ converse_container_image_self_build_name }} \
-      {% for arg in converse_process_extra_arguments %}
+      {{ static_web_server_container_image_self_build_name }} \
+      {% for arg in static_web_server_process_extra_arguments %}
       {{ arg }} \
       {% endfor %}
 
-{% for network in converse_container_additional_networks %}
-ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ converse_identifier }}
+{% for network in static_web_server_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ static_web_server_identifier }}
 {% endfor %}
 
-ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ converse_identifier }}
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ static_web_server_identifier }}
 
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ converse_identifier }} 2>/dev/null || true'
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ converse_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ static_web_server_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ static_web_server_identifier }} 2>/dev/null || true'
 
 Restart=always
 RestartSec=30
-SyslogIdentifier={{ converse_identifier }}
+SyslogIdentifier={{ static_web_server_identifier }}
 
 [Install]
 WantedBy=multi-user.target

@@ -10,7 +10,7 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: converse-${MOLECULE_DISTRO:-ubuntu2604}-default
+  - name: static-web-server-${MOLECULE_DISTRO:-ubuntu2604}-default
     image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
@@ -34,16 +34,16 @@ provisioner:
     group_vars:
       all:
         # Helper variables
-        converse_debug_service_enabled: false
-        converse_restarts_check_enabled: true
+        static_web_server_debug_service_enabled: false
+        static_web_server_restarts_check_enabled: true
 
-        # Variables for Converse
-        converse_uid: 1000
-        converse_gid: 1000
-        converse_scheme: http
-        converse_hostname: localhost
-        converse_container_labels_traefik_enabled: false
-        converse_container_http_host_bind_port: 8080
+        # Variables for Static Web Server
+        static_web_server_uid: 1000
+        static_web_server_gid: 1000
+        static_web_server_scheme: http
+        static_web_server_hostname: localhost
+        static_web_server_container_labels_traefik_enabled: false
+        static_web_server_container_http_host_bind_port: 8080
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles

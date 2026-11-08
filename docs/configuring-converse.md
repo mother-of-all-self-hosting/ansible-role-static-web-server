@@ -16,42 +16,42 @@ SPDX-FileCopyrightText: 2024-2026 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Setting up Converse
+# Setting up Static Web Server
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Converse](https://conversejs.org/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Static Web Server](https://static-web-serverjs.org/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Converse is a free and open-source XMPP chat client written in JavaScript which can be tightly integrated into any website.
+Static Web Server is a free and open-source XMPP chat client written in JavaScript which can be tightly integrated into any website.
 
-See the project's [documentation](https://conversejs.org/docs/html/index.html) to learn what Converse does and why it might be useful to you.
+See the project's [documentation](https://static-web-serverjs.org/docs/html/index.html) to learn what Static Web Server does and why it might be useful to you.
 
 ## Adjusting the playbook configuration
 
-To enable Converse with this role, add the following configuration to your `vars.yml` file.
+To enable Static Web Server with this role, add the following configuration to your `vars.yml` file.
 
 **Note**: the path should be something like `inventory/host_vars/mash.example.com/vars.yml` if you use the [MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 ```yaml
 ########################################################################
 #                                                                      #
-# converse                                                             #
+# static_web_server                                                    #
 #                                                                      #
 ########################################################################
 
-converse_enabled: true
+static_web_server_enabled: true
 
 ########################################################################
 #                                                                      #
-# /converse                                                            #
+# /static_web_server                                                   #
 #                                                                      #
 ########################################################################
 ```
 
 ### Set the hostname
 
-To enable Converse you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable Static Web Server you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
-converse_hostname: "example.com"
+static_web_server_hostname: "example.com"
 ```
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
@@ -62,9 +62,9 @@ There are some additional things you may wish to configure about the service.
 
 Take a look at:
 
-- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `converse_config_initialize_custom_enabled` and `converse_config_initialize_custom` variables.
+- [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `static_web_server_config_initialize_custom_enabled` and `static_web_server_config_initialize_custom` variables.
 
-Refer to [this page](https://conversejs.org/docs/html/configuration.html) for available options which can be set to `converse_config_initialize_custom`.
+Refer to [this page](https://static-web-serverjs.org/docs/html/configuration.html) for available options which can be set to `static_web_server_config_initialize_custom`.
 
 ## Installing
 
@@ -78,18 +78,18 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, Converse becomes available at the specified hostname like `https://example.com`.
+After running the command for installation, Static Web Server becomes available at the specified hostname like `https://example.com`.
 
 ## Troubleshooting
 
 ### Check the service's logs
 
-You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu converse` (or how you/your playbook named the service, e.g. `mash-converse`).
+You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu static-web-server` (or how you/your playbook named the service, e.g. `mash-static-web-server`).
 
 #### Increase logging verbosity
 
 If you want to increase the verbosity, add the following configuration to your `vars.yml` file:
 
 ```yaml
-converse_config_initialize_loglevel: debug
+static_web_server_config_initialize_loglevel: debug
 ```

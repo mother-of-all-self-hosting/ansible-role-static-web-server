@@ -4,64 +4,64 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Ensure Converse path exists
+- name: Ensure Static Web Server path exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: "0750"
-    owner: "{{ converse_uid }}"
-    group: "{{ converse_gid }}"
+    owner: "{{ static_web_server_uid }}"
+    group: "{{ static_web_server_gid }}"
   with_items:
-    - "{{ converse_base_path }}"
+    - "{{ static_web_server_base_path }}"
 
-- name: Ensure Converse support files installed
+- name: Ensure Static Web Server support files installed
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
-    dest: "{{ converse_base_path }}/{{ item }}"
+    dest: "{{ static_web_server_base_path }}/{{ item }}"
     mode: "0640"
-    owner: "{{ converse_uid }}"
-    group: "{{ converse_gid }}"
+    owner: "{{ static_web_server_uid }}"
+    group: "{{ static_web_server_gid }}"
   with_items:
     - env
     - labels
-  register: converse_support_files_result
+  register: static_web_server_support_files_result
 
-- name: Ensure Converse container network is created via community.docker.docker_network
+- name: Ensure Static Web Server container network is created via community.docker.docker_network
   when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
   community.docker.docker_network:
     enable_ipv6: "{{ devture_systemd_docker_base_ipv6_enabled }}"
-    name: "{{ converse_container_network }}"
+    name: "{{ static_web_server_container_network }}"
     driver: bridge
     driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
-  register: converse_network_creation_result
+  register: static_web_server_network_creation_result
 
-- name: Ensure Converse container network is created via ansible.builtin.command
+- name: Ensure Static Web Server container network is created via ansible.builtin.command
   when: devture_systemd_docker_base_container_network_creation_method == 'command'
   ansible.builtin.command:
     cmd: >-
       {{ devture_systemd_docker_base_host_command_docker }} network create
       {% if devture_systemd_docker_base_ipv6_enabled %}--ipv6{% endif %}
       {{ devture_systemd_docker_base_container_networks_driver_options_string }}
-      {{ converse_container_network }}
-  register: converse_network_creation_result
-  changed_when: converse_network_creation_result.rc == 0
-  failed_when: converse_network_creation_result.rc != 0 and 'already exists' not in converse_network_creation_result.stderr
+      {{ static_web_server_container_network }}
+  register: static_web_server_network_creation_result
+  changed_when: static_web_server_network_creation_result.rc == 0
+  failed_when: static_web_server_network_creation_result.rc != 0 and 'already exists' not in static_web_server_network_creation_result.stderr
 
-- name: Ensure Converse systemd service is present
+- name: Ensure Static Web Server systemd service is present
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/systemd/converse.service.j2"
-    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ converse_identifier }}.service"
+    src: "{{ role_path }}/templates/systemd/static-web-server.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ static_web_server_identifier }}.service"
     mode: "0644"
-  register: converse_systemd_service_result
+  register: static_web_server_systemd_service_result
 
-- name: Determine whether the Converse container is stale
+- name: Determine whether the Static Web Server container is stale
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/util/determine_container_staleness.yml"
 
-- name: Determine whether Converse needs a restart
+- name: Determine whether Static Web Server needs a restart
   ansible.builtin.set_fact:
-    converse_restart_necessary: >-
+    static_web_server_restart_necessary: >-
       {{
-        converse_support_files_result.changed | default(false)
-        or converse_systemd_service_result.changed | default(false)
-        or converse_container_stale | bool
+        static_web_server_support_files_result.changed | default(false)
+        or static_web_server_systemd_service_result.changed | default(false)
+        or static_web_server_container_stale | bool
       }}

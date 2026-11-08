@@ -4,26 +4,26 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify Converse systemd service
+- name: Verify Static Web Server systemd service
   hosts: all
   become: true
   gather_facts: false
 
   vars:
-    converse_verify_units:
-      - converse.service
+    static_web_server_verify_units:
+      - static-web-server.service
 
   tasks:
-    - name: Verify that Converse works
+    - name: Verify that Static Web Server works
       block:
-        - name: Wait for the Converse systemd services to become active (up to 180s each)
+        - name: Wait for the Static Web Server systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
             name: "{{ item }}"
-          register: converse_services
-          until: converse_services.status.ActiveState == 'active'
+          register: static_web_server_services
+          until: static_web_server_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
-          loop: "{{ converse_verify_units }}"
+          loop: "{{ static_web_server_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -31,43 +31,43 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the Converse systemd services are active
+        - name: Assert the Static Web Server systemd services are active
           ansible.builtin.assert:
-            that: converse_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            that: static_web_server_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
             fail_msg: >-
               Not every service is active:
-              {{ dict(converse_verify_units | zip(converse_services.results | map(attribute='status.ActiveState'))) }}
+              {{ dict(static_web_server_verify_units | zip(static_web_server_services.results | map(attribute='status.ActiveState'))) }}
             success_msg: "Every systemd service is active"
 
-        - name: Retrieve the Converse systemd services log for debugging
-          when: converse_debug_service_enabled | bool
+        - name: Retrieve the Static Web Server systemd services log for debugging
+          when: static_web_server_debug_service_enabled | bool
           ansible.builtin.command:
             cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
-          loop: "{{ converse_verify_units }}"
+          loop: "{{ static_web_server_verify_units }}"
 
-        - name: Verify Converse web interface availability
+        - name: Verify Static Web Server web interface availability
           block:
-            - name: Wait for Converse web interface to be rendered (up to 10m)
+            - name: Wait for Static Web Server web interface to be rendered (up to 10m)
               ansible.builtin.uri:
                 url: "http://localhost:8080/"
                 method: GET
                 status_code: [200]
                 follow_redirects: none
                 return_content: true
-              register: converse_web
-              until: converse_web.status in [200]
+              register: static_web_server_web
+              until: static_web_server_web.status in [200]
               retries: 120
               delay: 5
 
-            - name: Assert the Converse web interface rendered
+            - name: Assert the Static Web Server web interface rendered
               ansible.builtin.assert:
-                that: "'<title>Converse</title>' in converse_web.content"
-                fail_msg: "Converse web interface was not rendered"
-                success_msg: "Converse web interface was rendered"
+                that: "'<title>Static Web Server</title>' in static_web_server_web.content"
+                fail_msg: "Static Web Server web interface was not rendered"
+                success_msg: "Static Web Server web interface was rendered"
 
         - name: Verify nothing was quietly restarting while all of that was being checked
-          when: "converse_restarts_check_enabled | bool"
+          when: "static_web_server_restarts_check_enabled | bool"
           block:
             # `Restart=always` means the unit reads `active` while it is crash-looping,
             # so `active` on its own says very little. The window has to be watched with
@@ -75,8 +75,8 @@
             - name: Sample the restart counters
               ansible.builtin.systemd_service:
                 name: "{{ item }}"
-              register: converse_restarts_before
-              loop: "{{ converse_verify_units }}"
+              register: static_web_server_restarts_before
+              loop: "{{ static_web_server_verify_units }}"
 
             # Comfortably longer than the unit's `RestartSec=30`, so a crash loop has to
             # tick at least once inside the window.
@@ -87,43 +87,43 @@
             - name: Sample the restart counters again
               ansible.builtin.systemd_service:
                 name: "{{ item }}"
-              register: converse_restarts_after
-              loop: "{{ converse_verify_units }}"
+              register: static_web_server_restarts_after
+              loop: "{{ static_web_server_verify_units }}"
 
             - name: Assert no service restarted while it was up
               ansible.builtin.assert:
                 that:
-                  - converse_restarts_after.results | map(attribute='status.NRestarts') | list == converse_restarts_before.results | map(attribute='status.NRestarts') | list
-                  - converse_restarts_after.results | map(attribute='status.ActiveState') | unique | list == ['active']
+                  - static_web_server_restarts_after.results | map(attribute='status.NRestarts') | list == static_web_server_restarts_before.results | map(attribute='status.NRestarts') | list
+                  - static_web_server_restarts_after.results | map(attribute='status.ActiveState') | unique | list == ['active']
                 fail_msg: >-
                   A service restarted while it was supposedly up, so `active` was hiding a crash loop.
                   Before:
-                  {% for unit, restarts in converse_verify_units | zip(converse_restarts_before.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %},
+                  {% for unit, restarts in static_web_server_verify_units | zip(static_web_server_restarts_before.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %},
                   after:
-                  {% for unit, restarts in converse_verify_units | zip(converse_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}
+                  {% for unit, restarts in static_web_server_verify_units | zip(static_web_server_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}
                 success_msg: >-
                   None of the services restarted over 45 seconds of watching (restarts so far:
-                  {% for unit, restarts in converse_verify_units | zip(converse_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %})
+                  {% for unit, restarts in static_web_server_verify_units | zip(static_web_server_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %})
 
-        - name: Show the Converse verification summary
+        - name: Show the Static Web Server verification summary
           ansible.builtin.debug:
             msg:
-              - "Converse systemd: {% for unit, state in converse_verify_units | zip(converse_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
-              - "Converse restarts: {% for unit, restarts in converse_verify_units | zip(converse_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}"
-              - "Converse HTTP: {{ converse_web.status }}"
+              - "Static Web Server systemd: {% for unit, state in static_web_server_verify_units | zip(static_web_server_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
+              - "Static Web Server restarts: {% for unit, restarts in static_web_server_verify_units | zip(static_web_server_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}"
+              - "Static Web Server HTTP: {{ static_web_server_web.status }}"
 
       rescue:
         # Whatever went wrong, the reason is almost always in the systemd service log.
-        - name: Retrieve the Converse systemd service log
+        - name: Retrieve the Static Web Server systemd service log
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=converse.service
-          register: converse_service_log
+            cmd: journalctl --no-pager --output=cat --unit=static-web-server.service
+          register: static_web_server_service_log
           changed_when: false
 
-        - name: Show the Converse systemd service log
+        - name: Show the Static Web Server systemd service log
           ansible.builtin.debug:
-            var: converse_service_log.stdout_lines
+            var: static_web_server_service_log.stdout_lines
 
         - name: Fail because verification did not pass
           ansible.builtin.fail:
-            msg: "Converse verification failed. The systemd service log is printed above."
+            msg: "Static Web Server verification failed. The systemd service log is printed above."

@@ -4,24 +4,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Perform Converse installation tasks
-  when: converse_enabled | bool
+- name: Perform Static Web Server installation tasks
+  when: static_web_server_enabled | bool
   tags:
     - setup-all
-    - setup-converse
+    - setup-static-web-server
     - install-all
-    - install-converse
+    - install-static-web-server
   block:
-    - name: Validate Converse configuration
+    - name: Validate Static Web Server configuration
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-    - name: Install Converse
+    - name: Install Static Web Server
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
-- name: Perform Converse uninstallation tasks
-  when: not converse_enabled | bool
+- name: Perform Static Web Server uninstallation tasks
+  when: not static_web_server_enabled | bool
   tags:
     - setup-all
-    - setup-converse
+    - setup-static-web-server
   block:
-    - name: Uninstall Converse
+    - name: Uninstall Static Web Server
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

@@ -2,9 +2,9 @@
 galaxy_info:
   author: Suguru Hirahara
   company: progressiv
-  role_name: converse
+  role_name: static_web_server
   namespace: progressiv
-  description: Converse
+  description: Static Web Server
   platforms:
     - name: Debian
       versions:

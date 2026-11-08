@@ -4,36 +4,36 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Fail if required Converse settings not defined
+- name: Fail if required Static Web Server settings not defined
   ansible.builtin.fail:
     msg: >-
       You need to define a required configuration setting (`{{ item }}`).
   when: "lookup('vars', item, default='') | string | length == 0"
   with_items:
-    - converse_uid
-    - converse_gid
-    - converse_hostname
-    - converse_path_prefix
-    - converse_container_network
+    - static_web_server_uid
+    - static_web_server_gid
+    - static_web_server_hostname
+    - static_web_server_path_prefix
+    - static_web_server_container_network
 
 - name: Run if Traefik is enabled
-  when: converse_container_labels_traefik_enabled | bool
+  when: static_web_server_container_labels_traefik_enabled | bool
   block:
-    - name: Fail if Traefik settings required for Converse are not defined
+    - name: Fail if Traefik settings required for Static Web Server are not defined
       ansible.builtin.fail:
         msg: >-
           You need to define a required configuration setting (`{{ item.name }}`).
       when: "item.when | bool and lookup('vars', item.name, default='') | string | length == 0"
       with_items:
-        - { "name": "converse_container_labels_traefik_hostname", when: true }
-        - { "name": "converse_container_labels_traefik_path_prefix", when: true }
-        - { "name": "converse_container_labels_traefik_middleware_basic_auth_users", when: "{{ converse_container_labels_traefik_middleware_basic_auth_enabled }}" }
+        - { "name": "static_web_server_container_labels_traefik_hostname", when: true }
+        - { "name": "static_web_server_container_labels_traefik_path_prefix", when: true }
+        - { "name": "static_web_server_container_labels_traefik_middleware_basic_auth_users", when: "{{ static_web_server_container_labels_traefik_middleware_basic_auth_enabled }}" }
 
     # We ensure it doesn't end with a slash, because we handle both (slash and no-slash).
-    # Knowing that `converse_container_labels_traefik_path_prefix` does not end with a slash
+    # Knowing that `static_web_server_container_labels_traefik_path_prefix` does not end with a slash
     # ensures we know how to set these routes up without having to do "does it end with a slash" checks elsewhere.
-    - name: Fail if converse_container_labels_traefik_path_prefix ends with a slash
+    - name: Fail if static_web_server_container_labels_traefik_path_prefix ends with a slash
       ansible.builtin.fail:
         msg: >-
-          converse_container_labels_traefik_path_prefix (`{{ converse_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/converse`).
-      when: "converse_container_labels_traefik_path_prefix != '/' and converse_container_labels_traefik_path_prefix[-1] == '/'"
+          static_web_server_container_labels_traefik_path_prefix (`{{ static_web_server_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/static-web-server`).
+      when: "static_web_server_container_labels_traefik_path_prefix != '/' and static_web_server_container_labels_traefik_path_prefix[-1] == '/'"
