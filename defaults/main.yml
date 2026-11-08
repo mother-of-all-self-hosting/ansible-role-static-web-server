@@ -7,14 +7,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Project source code URL: https://github.com/static-web-serverjs/static-web-server.js
+# Project source code URL: https://github.com/static-web-server/static-web-server
 
 static_web_server_enabled: true
 
 static_web_server_identifier: static-web-server
 static_web_server_base_path: "/{{ static_web_server_identifier }}"
 
-static_web_server_version: v14.0.1
+# renovate: datasource=docker depName=joseluisq/static-web-server
+static_web_server_version: 3.0.0-beta.2
 
 static_web_server_uid: ""
 static_web_server_gid: ""
@@ -28,6 +29,12 @@ static_web_server_hostname: ""
 # The path at which Static Web Server is served.
 # This value must either be `/` or not end with a slash (e.g. `/static-web-server`).
 static_web_server_path_prefix: /
+
+static_web_server_container_image: "{{ static_web_server_container_image_registry_prefix }}joseluisq/static-web-server:{{ static_web_server_container_image_tag }}"
+static_web_server_container_image_tag: "{{ static_web_server_version }}"
+static_web_server_container_image_registry_prefix: "{{ static_web_server_container_image_registry_prefix_upstream }}"
+static_web_server_container_image_registry_prefix_upstream: "{{ static_web_server_container_image_registry_prefix_upstream_default }}"
+static_web_server_container_image_registry_prefix_upstream_default: docker.io/
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 static_web_server_container_network: "{{ static_web_server_identifier }}"

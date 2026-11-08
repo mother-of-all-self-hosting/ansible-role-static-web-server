@@ -41,7 +41,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in static_web_server_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ static_web_server_container_image_self_build_name }} \
+      {{ static_web_server_container_image }} \
       {% for arg in static_web_server_process_extra_arguments %}
       {{ arg }} \
       {% endfor %}

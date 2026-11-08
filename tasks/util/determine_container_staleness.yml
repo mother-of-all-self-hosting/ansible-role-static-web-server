@@ -43,7 +43,7 @@
     - name: Inspect the Static Web Server container image
       vars:
         # The same image that the systemd service creates the container from.
-        image: "{{ static_web_server_container_image_self_build_name }}"
+        image: "{{ static_web_server_container_image }}"
       ansible.builtin.command:
         cmd: "{{ devture_systemd_docker_base_host_command_docker }} image inspect --format={{ '{{' }}.Id{{ '}}' }} {{ image }}"
       register: static_web_server_container_staleness_image_inspect_result
