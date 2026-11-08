@@ -4,16 +4,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: (Deprecation) Catch and report renamed settings
-  ansible.builtin.fail:
-    msg: >-
-      Your configuration contains a variable, which now has a different name.
-      Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
-  when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
-  with_items:
-    - { "old": "converse_container_labels_middleware_basic_auth_enabled", "new": "converse_container_labels_traefik_middleware_basic_auth_enabled" }
-    - { "old": "converse_container_labels_middleware_basic_auth_users", "new": "converse_container_labels_traefik_middleware_basic_auth_users" }
-
 - name: Fail if required Converse settings not defined
   ansible.builtin.fail:
     msg: >-
@@ -25,24 +15,6 @@
     - converse_hostname
     - converse_path_prefix
     - converse_container_network
-
-- name: Fail if Converse light theme type invalid
-  ansible.builtin.fail:
-    msg: >-
-      converse_config_initialize_theme must be 'classic', 'cyberpunk', 'dracula', or 'nordic'
-  when: "converse_config_initialize_theme not in ['classic', 'cyberpunk', 'dracula', 'nordic']"
-
-- name: Fail if Converse dark theme type sinvalid
-  ansible.builtin.fail:
-    msg: >-
-      converse_config_initialize_dark_theme must be 'classic', 'cyberpunk', 'dracula', or 'nordic'
-  when: "converse_config_initialize_dark_theme not in ['classic', 'cyberpunk', 'dracula', 'nordic']"
-
-- name: Fail if logging level of Static Web Server for Converse is invalid
-  ansible.builtin.fail:
-    msg: >-
-      converse_environment_variables_server_log_level must be 'debug', 'error', 'info', 'trace', or 'warn'
-  when: "converse_environment_variables_server_log_level not in ['debug', 'error', 'info', 'trace', 'warn']"
 
 - name: Run if Traefik is enabled
   when: converse_container_labels_traefik_enabled | bool

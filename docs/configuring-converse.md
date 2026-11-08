@@ -24,13 +24,6 @@ Converse is a free and open-source XMPP chat client written in JavaScript which 
 
 See the project's [documentation](https://conversejs.org/docs/html/index.html) to learn what Converse does and why it might be useful to you.
 
->[!NOTE]
-> The role is configured to build the Docker image by default, as it is not provided by the upstream project. Before proceeding, make sure that the machine which you are going to run the Ansible commands against has sufficient computing power to build it.
-
-## Prerequisites
-
-To use XMPP via HTTP with the client, it is necessary to use a BOSH connection manager or the WebSocket API. Note that this role does not prepare one for you. When using the service, please check whether your XMPP server supports the WebSocket API and make sure to set up the BOSH connection manager if it does not.
-
 ## Adjusting the playbook configuration
 
 To enable Converse with this role, add the following configuration to your `vars.yml` file.
@@ -63,42 +56,6 @@ converse_hostname: "example.com"
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
-### Specify BOSH / WebSocket API
-
-To use XMPP via HTTP with the client, it is necessary to use a BOSH connection manager or the WebSocket API.
-
-To use a BOSH connection manager, add the following configuration to your `vars.yml` file:
-
-```yaml
-converse_config_initialize_bosh_service_url: YOUR_BOSH_SERVICE_URL_HERE
-```
-
-To use the WebSocket API instead, add the following configuration to your `vars.yml` file:
-
-```yaml
-converse_config_initialize_websocket_url: YOUR_WEBSOCKET_API_URL_HERE
-```
-
-### Enabling OMEMO encryption
-
-By default the role enables OMEMO encryption for the chat which supports it. You can disable it by adding the following configuration to your `vars.yml` file:
-
-```yaml
-converse_config_initialize_omemo_default: false
-```
-
-### Setting themes (optional)
-
-It is possible to set light and dark themes by adding the following configuration to your `vars.yml` file:
-
-```yaml
-converse_config_initialize_theme: LIGHT_THEME_HERE
-
-converse_config_initialize_dark_theme: DARK_THEME_HERE
-```
-
-By default, the `classic` theme is specified to the light one, and the `dracula` to the dark one.
-
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
@@ -124,8 +81,6 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 After running the command for installation, Converse becomes available at the specified hostname like `https://example.com`.
 
 ## Troubleshooting
-
-Refer to [this dedicated page](https://conversejs.org/docs/html/troubleshooting.html) on the project website for troubleshooting.
 
 ### Check the service's logs
 

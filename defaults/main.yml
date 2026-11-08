@@ -13,7 +13,6 @@ converse_enabled: true
 
 converse_identifier: converse
 converse_base_path: "/{{ converse_identifier }}"
-converse_src_path: "{{ converse_base_path }}/src"
 
 converse_version: v14.0.1
 
@@ -29,15 +28,6 @@ converse_hostname: ""
 # The path at which Converse is served.
 # This value must either be `/` or not end with a slash (e.g. `/converse`).
 converse_path_prefix: /
-
-# NOTE: the Docker image is not provided by the developers
-converse_container_image_self_build_name: "conversejs/conversejs:{{ converse_container_image_self_build_repo_version }}"
-converse_container_image_self_build_repo: "https://github.com/conversejs/converse.js"
-converse_container_image_self_build_repo_version: "{{ converse_version if converse_version != 'latest' else 'master' }}"
-converse_container_image_self_build_src_files_path: "{{ converse_base_path }}/docker-src"
-converse_container_image_self_build_base_image: "{{ converse_container_image_self_build_base_image_name }}:{{ converse_container_image_self_build_base_image_tag }}"
-converse_container_image_self_build_base_image_name: joseluisq/static-web-server
-converse_container_image_self_build_base_image_tag: 2.44.1
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 converse_container_network: "{{ converse_identifier }}"
@@ -219,60 +209,6 @@ converse_container_cleanup_command: |
   done;
   echo "Failed to remove stale container {{ converse_identifier }} after {{ converse_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
-
-# Control if analytics is enabled
-converse_analytics_enabled: false
-
-# Control if initialization options in converse.initialize are unset
-converse_config_initialize_custom_enabled: false
-
-# Specify custom initialization options in converse.initialize
-converse_config_initialize_custom: ""
-
-# Specify theme
-# Valid values: classic, cyberpunk, dracula, nordic
-converse_config_initialize_theme: classic
-
-# Specify dark theme
-# Valid values: classic, cyberpunk, dracula, nordic
-converse_config_initialize_dark_theme: dracula
-
-# Specify authentication option
-# Valid values: login, external, anonymous, prebind
-converse_config_initialize_authentication: login
-
-# Specify the amount of seconds after which the user’s presence status should automatically become `away`
-# Set `0` to disable this option
-converse_config_initialize_auto_away: 0
-
-# Control if automatically reconnect to the XMPP server if the connection drops unexpectedly
-converse_config_initialize_auto_reconnect: true
-
-# Specify a BOSH connection manager which acts as a middle man between the HTTP and XMPP protocols
-converse_config_initialize_bosh_service_url: ""
-
-# Specify log level
-# Valid values: debug, error, fatal, info, warn
-converse_config_initialize_loglevel: info
-
-# Control if XEP-0313 (Message Archive Management) is supported
-converse_config_initialize_message_archiving: always
-
-# Control if notification sound is played on a personal message or your nickname being mentioned in a room
-converse_config_initialize_play_sounds: true
-
-# Control if OMEMO encryption is used by default when the chat supports it
-converse_config_initialize_omemo_default: true
-
-# Specify the view_mode setting configures Converse’s mode and resulting behavior
-# Valid values: fullscreen, overlayed [sic], embedded
-converse_config_initialize_view_mode: fullscreen
-
-# Specify WebSocket URI, which Converse can connect to
-converse_config_initialize_websocket_url: ""
-
-# Control if a background with the Converse logo is displayed
-converse_config_initialize_show_background: false
 
 # Specify the timezone
 converse_environment_variables_tz: UTC
