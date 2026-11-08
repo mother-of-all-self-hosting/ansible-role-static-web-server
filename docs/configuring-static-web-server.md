@@ -59,6 +59,21 @@ static_web_server_hostname: "example.com"
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
+### Mounting the root directory
+
+To mount the root directory to overwrite the default one, add the following configuration to your `vars.yml` file (adapt to your needs):
+
+```yaml
+static_web_server_container_additional_volumes_custom:
+  - type: bind
+    src: /path/on/the/host
+    dst: "{{ static_web_server_environment_variables_server_root }}"
+    options: readonly
+```
+
+>[!NOTE]
+> The directory should be mounted with `readonly` to prevent accidental modification.
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
