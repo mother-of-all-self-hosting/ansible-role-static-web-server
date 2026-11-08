@@ -74,6 +74,10 @@ static_web_server_container_additional_volumes_custom:
 >[!NOTE]
 > The directory should be mounted with `readonly` to prevent accidental modification.
 
+### Integrating with Prometheus (optional)
+
+Static Web Server can natively expose metrics to Prometheus. If you are looking for an integration, you can check out the MASH Ansible playbook. Please refer to the service's documentation over there for more information.
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.

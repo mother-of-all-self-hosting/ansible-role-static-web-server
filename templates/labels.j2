@@ -62,6 +62,52 @@ traefik.http.routers.{{ static_web_server_identifier }}.tls.certResolver={{ stat
 {% endif %}
 
 traefik.http.services.{{ static_web_server_identifier }}.loadbalancer.server.port={{ static_web_server_container_http_port }}
+
+{% if static_web_server_container_labels_traefik_metrics_enabled %}
+########################################################################
+#                                                                      #
+# Metrics                                                              #
+#                                                                      #
+########################################################################
+
+{% set middlewares = static_web_server_container_labels_traefik_metrics_middlewares %}
+
+{% if static_web_server_container_labels_traefik_metrics_middleware_basic_auth_enabled %}
+traefik.http.middlewares.{{ static_web_server_identifier }}-metrics-basic-auth.basicauth.users={{ static_web_server_container_labels_traefik_metrics_middleware_basic_auth_users }}
+{% set middlewares = middlewares + [static_web_server_identifier + '-metrics-basic-auth'] %}
+{% endif %}
+
+traefik.http.middlewares.{{ static_web_server_identifier }}-metrics-replace-path.replacepath.path=/metrics
+{% set middlewares = middlewares + [static_web_server_identifier + '-metrics-replace-path'] %}
+
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.rule={{ static_web_server_container_labels_traefik_metrics_rule }}
+
+{% if static_web_server_container_labels_traefik_metrics_priority | int > 0 %}
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.priority={{ static_web_server_container_labels_traefik_metrics_priority }}
+{% endif %}
+
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.service={{ static_web_server_identifier }}-metrics
+
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.middlewares={{ middlewares | join(',') }}
+{% endif %}
+
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.entrypoints={{ static_web_server_container_labels_traefik_metrics_entrypoints }}
+
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.tls={{ static_web_server_container_labels_traefik_metrics_tls | to_json }}
+{% if static_web_server_container_labels_traefik_metrics_tls %}
+traefik.http.routers.{{ static_web_server_identifier }}-metrics.tls.certResolver={{ static_web_server_container_labels_traefik_metrics_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ static_web_server_identifier }}-metrics.loadbalancer.server.port={{ static_web_server_container_http_port }}
+
+########################################################################
+#                                                                      #
+# /Metrics                                                             #
+#                                                                      #
+########################################################################
+{% endif %}
+
 {% endif %}
 
 {% for arg in static_web_server_container_labels_additional_labels %}

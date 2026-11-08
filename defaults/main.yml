@@ -84,6 +84,21 @@ static_web_server_container_labels_traefik_middleware_basic_auth_enabled: false
 # See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
 static_web_server_container_labels_traefik_middleware_basic_auth_users: ""
 
+# Controls if labels are added to expose the Prometheus metrics publicly.
+static_web_server_container_labels_traefik_metrics_enabled: "{{ static_web_server_environment_variables_server_metrics }}"
+static_web_server_container_labels_traefik_metrics_hostname: "{{ static_web_server_hostname }}"
+# The path prefix must either be `/` or not end with a slash (e.g. `/metrics`).
+static_web_server_container_labels_traefik_metrics_path_prefix: /metrics
+static_web_server_container_labels_traefik_metrics_rule: "Host(`{{ static_web_server_container_labels_traefik_metrics_hostname }}`){% if static_web_server_container_labels_traefik_metrics_path_prefix != '/' %} && PathPrefix(`{{ static_web_server_container_labels_traefik_metrics_path_prefix }}`){% endif %}"
+static_web_server_container_labels_traefik_metrics_priority: 0
+static_web_server_container_labels_traefik_metrics_entrypoints: "{{ static_web_server_container_labels_traefik_entrypoints }}"
+static_web_server_container_labels_traefik_metrics_middlewares: []
+static_web_server_container_labels_traefik_metrics_tls: "{{ static_web_server_container_labels_traefik_metrics_entrypoints != 'web' }}"
+static_web_server_container_labels_traefik_metrics_tls_certResolver: "{{ static_web_server_container_labels_traefik_tls_certResolver }}"  # noqa var-naming
+static_web_server_container_labels_traefik_metrics_middleware_basic_auth_enabled: false
+# See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
+static_web_server_container_labels_traefik_metrics_middleware_basic_auth_users: ""
+
 # Controls which additional headers to attach to all HTTP requests.
 # To add your own custom request headers, use `static_web_server_container_labels_traefik_additional_request_headers_custom`
 static_web_server_container_labels_traefik_additional_request_headers: "{{ static_web_server_container_labels_traefik_additional_request_headers_auto | combine(static_web_server_container_labels_traefik_additional_request_headers_custom) }}"
@@ -225,6 +240,9 @@ static_web_server_environment_variables_tz: UTC
 static_web_server_environment_variables_server_log_level: info
 
 static_web_server_environment_variables_server_root: /public
+
+# Control if the /metrics endpoint that exposes Prometheus metrics is enabled
+static_web_server_environment_variables_server_metrics: false
 
 # Additional environment variables.
 static_web_server_environment_variables_additional_variables: ""
