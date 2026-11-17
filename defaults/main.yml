@@ -15,7 +15,7 @@ static_web_server_identifier: static-web-server
 static_web_server_base_path: "/{{ static_web_server_identifier }}"
 
 # renovate: datasource=docker depName=joseluisq/static-web-server
-static_web_server_version: 3.0.0-beta.2
+static_web_server_version: 3.0.0-beta.3
 
 static_web_server_uid: ""
 static_web_server_gid: ""
