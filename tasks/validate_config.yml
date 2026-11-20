@@ -12,9 +12,6 @@
   with_items:
     - static_web_server_uid
     - static_web_server_gid
-    - static_web_server_hostname
-    - static_web_server_path_prefix
-    - static_web_server_container_network
 
 - name: Run if Traefik is enabled
   when: static_web_server_container_labels_traefik_enabled | bool
